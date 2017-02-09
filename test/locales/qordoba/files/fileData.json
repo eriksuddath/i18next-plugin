@@ -1,0 +1,12 @@
+{
+  "test.json": {
+    "fileId": 736287,
+    "lastModified": 1486429899000,
+    "filepath": "./test/locales/qordoba/en/common.json"
+  },
+  "test2.json": {
+    "fileId": 111111,
+    "lastModified": 1486599009000,
+    "filepath": "./test/locales/i18next/en/test2.json"
+  }
+}

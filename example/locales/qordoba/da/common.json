@@ -1,0 +1,45 @@
+{
+  "basic": {
+    "key": "",
+    "keyDeep": {
+      "inner": "Indre værdi af en dyb nøgle"
+    }
+  },
+  "interpolation": {
+    "key": "{{what}} er {{how}}",
+    "keyEscaped": "Ingen fare {{myVar}}",
+    "keyUnescaped": "Farligt {{- myVar}}",
+    "keyDeep": "Jeg er {{author.what}}",
+    "keyDifferent": "__myVar__ er vigtigt"
+  },
+  "nesting": {
+    "nesting3": "3",
+    "girlsAndBoys": "$t (Nesting.girls,}}) {'count': {{girls} og dreng {{count}}",
+    "girlsAndBoys_plural": "$t (Nesting.girls,}}) {'count': {{girls} og drenge {{count}}",
+    "girls": "{{count}} pige",
+    "girls_plural": "{{count}} piger",
+    "key1": "Hej Verden!",
+    "key2": "Sige: {{val}}"
+  },
+  "singularPlural": {
+    "key": "Vare",
+    "key_plural": "Emner",
+    "keyWithCount": "{{count}} Vare",
+    "keyWithCount_plural": "{{count}} emner"
+  },
+  "multiplePluralForms": {
+    "key_0": "Nul",
+    "key_1": "Ental",
+    "key_2": "To",
+    "key_3": "Få",
+    "key_4": "Mange",
+    "key_5": "Pluralis"
+  },
+  "context": {
+    "friend": "En ven",
+    "friend_male": "En kæreste",
+    "friend_female": "En kæreste",
+    "friend_male_plural": "{{count}} kærester",
+    "friend_female_plural": "{{count}} veninder"
+  }
+}

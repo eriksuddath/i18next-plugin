@@ -1,0 +1,12 @@
+{
+  "common.json": {
+    "fileId": 736287,
+    "lastModified": 1486429899000,
+    "filepath": "./locales/qordoba/en/common.json"
+  },
+  "jumbo.json": {
+    "fileId": 736173,
+    "lastModified": 1486397482000,
+    "filepath": "./locales/qordoba/en/jumbo.json"
+  }
+}

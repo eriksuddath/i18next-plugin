@@ -1,0 +1,45 @@
+{
+  "basic": {
+    "key": "Un valor totalmente básico",
+    "keyDeep": {
+      "inner": "Valor interno de una clave profunda"
+    }
+  },
+  "interpolation": {
+    "key": "{{what}} es {{how}}",
+    "keyEscaped": "No hay {{myVar}} peligro",
+    "keyUnescaped": "Peligroso {{- myVar}}",
+    "keyDeep": "Yo soy {{author.what}}",
+    "keyDifferent": "__myVar__ es importante"
+  },
+  "nesting": {
+    "nesting3": "3",
+    "girlsAndBoys": "$t (Nesting.girls,}}) {'count': {{girls} y el niño {{count}}",
+    "girlsAndBoys_plural": "$t (nesting.girls,}}) {'count': {{girls} y los niños {{count}}",
+    "girls": "{{count}} niña",
+    "girls_plural": "{{count}} chicas",
+    "key1": "¡Hola WORLD!!!",
+    "key2": "Decir: {{val}}"
+  },
+  "singularPlural": {
+    "key": "Ít",
+    "key_plural": "Artículos",
+    "keyWithCount": "{{count}} Ít",
+    "keyWithCount_plural": "{{count}} artículos"
+  },
+  "multiplePluralForms": {
+    "key_0": "Cero",
+    "key_1": "Singular",
+    "key_2": "Dos",
+    "key_3": "Pocos",
+    "key_4": "Muchos",
+    "key_5": "Plural"
+  },
+  "context": {
+    "friend": "Un amigo",
+    "friend_male": "Un novio",
+    "friend_female": "Una novia",
+    "friend_male_plural": "{{count}} novios",
+    "friend_female_plural": "{{count}} novias"
+  }
+}
