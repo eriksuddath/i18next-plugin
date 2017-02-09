@@ -83,6 +83,7 @@ const watchSourceFiles = (path) => {
 
   watcher.on('change', (path, stats) => {
     console.log('Source files changed. Uploading to qordoba')
+    console.log('NEED TO ALSO COPY CHANGES OVER TO i18n source dir')
     syncSourceFiles();
     if (stats) console.log(`File ${path} changed size to ${stats.size}`);
   });
@@ -304,22 +305,21 @@ const writeDirectory = (lang, pathToQordobaLocales) => {
 
 // get target language ids and codes
 const getTargetLangs = () => {
-  const getLanguageURL = `https://devapi.qordoba.com/v2/projects/${projectId}`;
+  const getLanguageURL = `https://api.qordoba.com/v2/projects/detail`;
   const options = {
     method: 'GET',
-    projectId: projectId,
     url: getLanguageURL,
-    headers: { consumerKey },
+    headers: { consumerKey, projectId },
   };
 
   return rp(options)
   .then( (body) => {
-    const targetLanguages = JSON.parse(body).project.target_languages;
-    return targetLanguages.map(({ id, code }) => {
-      const lg = code.slice(0, 2);
-      const langId = id;
-      return { lg, langId }
-    });
+    return JSON.parse(body).targetLanguages.map(tl => {
+      return {
+        lg: tl.targetCode.slice(0, 2),
+        langId: tl.targetId
+      }
+    })
   })
   .catch( ({ body }) => console.log(body) )
 }
@@ -337,20 +337,38 @@ const getNamespaces = () => {
 }
 
 // get id of specified milestone
+// const getMilestoneId = () => {
+//   const options = {
+//     url: `https://app.qordoba.com/api/projects/${projectId}/workflow`,
+//     headers: { 'x-auth-token': xAuthToken, consumerKey },
+//   }
+//   return rp(options)
+//   .then(body => {
+//   const { workflow } = JSON.parse(body);
+//   const result = workflow.milestones
+//     .filter(milestone => milestone.milestone.name === MILESTONE)
+//     .map(milestone => milestone.milestone.id)[0]
+//   return result;
+//   })
+//   .then(res => milestoneId = res)
+//   .catch(err => console.log(err))
+// }
+
+// get id of specified milestone (new one)
 const getMilestoneId = () => {
   const options = {
-    url: `https://app.qordoba.com/api/projects/${projectId}/workflow`,
-    headers: { 'x-auth-token': xAuthToken, consumerKey },
+    url: `https://api.qordoba.com/v2/projects/workflow`,
+    headers: { consumerKey, projectId },
   }
   return rp(options)
   .then(body => {
-  const { workflow } = JSON.parse(body);
-  const result = workflow.milestones
-    .filter(milestone => milestone.milestone.name === MILESTONE)
-    .map(milestone => milestone.milestone.id)[0]
-  return result;
+  const id = JSON.parse(body).milestones
+    .filter(milestone => milestone.milestoneName === MILESTONE)[0].milestoneId;
+    // set to global
+    milestoneId = id;
+    console.log('milestoneId', milestoneId)
+    return id;
   })
-  .then(res => milestoneId = res)
   .catch(err => console.log(err))
 }
 
@@ -489,12 +507,12 @@ const syncTargetFiles = () => {
   console.log('Syncing target language files');
   const files = getNamespaces();
   const data = getTargetData(pathToQordobaLocales);
-  let languages, milestoneId;
+  let languages;
 
-  Promise.all([getTargetLangs(), getMilestoneId()])
+  // getMilestoneId sets a global variable, so we only make the call once
+  Promise.all([getTargetLangs(), milestoneId || getMilestoneId()])
   .then( (result) => {
     languages = result[0];
-    milestoneId = result[1];
     return getAllQordobaTimestamps(languages, files);
   })
   .then( (qTimestamps) => {
@@ -555,6 +573,7 @@ export function initQordoba(options, i18next) {
   .catch( err => console.log(err) )
 }
 
+// export private methods for testing
 export function _funcs() {
   return {
     testLog,

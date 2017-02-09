@@ -1,6 +1,6 @@
 {
   "basic": {
-    "key": "A totally basic value!!",
+    "key": "A totally basic value",
     "keyDeep": {
       "inner": "inner value of a deep key"
     }
