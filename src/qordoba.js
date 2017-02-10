@@ -336,24 +336,6 @@ const getNamespaces = () => {
   })
 }
 
-// get id of specified milestone
-// const getMilestoneId = () => {
-//   const options = {
-//     url: `https://app.qordoba.com/api/projects/${projectId}/workflow`,
-//     headers: { 'x-auth-token': xAuthToken, consumerKey },
-//   }
-//   return rp(options)
-//   .then(body => {
-//   const { workflow } = JSON.parse(body);
-//   const result = workflow.milestones
-//     .filter(milestone => milestone.milestone.name === MILESTONE)
-//     .map(milestone => milestone.milestone.id)[0]
-//   return result;
-//   })
-//   .then(res => milestoneId = res)
-//   .catch(err => console.log(err))
-// }
-
 // get id of specified milestone (new one)
 const getMilestoneId = () => {
   const options = {
@@ -366,7 +348,6 @@ const getMilestoneId = () => {
     .filter(milestone => milestone.milestoneName === MILESTONE)[0].milestoneId;
     // set to global
     milestoneId = id;
-    console.log('milestoneId', milestoneId)
     return id;
   })
   .catch(err => console.log(err))
@@ -388,22 +369,42 @@ const writeTargetData = (data, pathToQordobaLocales) => {
   return fs.writeFileSync(path, JSON.stringify(data, null, 2))
 }
 
-// get fileids and timestamp from qordoba by languageId
+// get fileids and timestamp from qordoba by languageId (old one)
+// const getQordobaTimestamps = (languageId) => {
+//   const getProjectFilesURL = `https://app.qordoba.com/api/projects/${projectId}/languages/${languageId}/page_settings/search`;
+//   const options = {
+//     method: 'POST',
+//     url: getProjectFilesURL,
+//     headers: { consumerKey, 'x-auth-token': xAuthToken },
+//     body: {},
+//     json: true
+//   }
+//   return rp(options)
+//     .then(body => {
+//       const obj = {};
+//       body.pages.forEach(({ page_id, update }) => {
+//         obj[page_id] = update;
+//       })
+//       return obj;
+//     })
+//   .catch(err => console.log(err))
+// }
+
+// get fileids and timestamp from qordoba by languageId (new One)
 const getQordobaTimestamps = (languageId) => {
-  const getProjectFilesURL = `https://app.qordoba.com/api/projects/${projectId}/languages/${languageId}/page_settings/search`;
-  const options = {
+  var options = { 
     method: 'POST',
-    url: getProjectFilesURL,
-    headers: { consumerKey, 'x-auth-token': xAuthToken },
+    url: 'https://api.qordoba.com/v2/files/list',
+    headers: 
+     { consumerKey, languageId, projectId, 'content-type': 'application/json' },
     body: {},
-    json: true
-  }
+    json: true 
+  };
+
   return rp(options)
     .then(body => {
       const obj = {};
-      body.pages.forEach(({ page_id, update }) => {
-        obj[page_id] = update;
-      })
+      body.forEach( ({ fileId, updated }) => obj[fileId] = updated )
       return obj;
     })
   .catch(err => console.log(err))
