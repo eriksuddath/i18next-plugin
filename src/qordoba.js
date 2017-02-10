@@ -356,32 +356,9 @@ const getAllQordobaTimestamps = (languages, files) => {
   })
 }
 
-// helper function to set nested values on object from array
-const assign = (obj, keys, val) => { 
-    const lastKey = keys.pop();
-    const lastObj = keys.reduce((obj, key) => 
-    obj[key] = obj[key] || {}, obj); 
-    lastObj[lastKey] = val;
-};
-
-// build Json object from response
-const buildJsonObject = (body) => {
-  return body.segments.map((segment) => {
-    return {
-      keys: segment.reference.split('/').filter(s => s !== ''),
-      value: segment.translation
-              .replace(/<com-qordoba-variable-escape>/g, '')
-              .replace(/<\/com-qordoba-variable-escape>/g, '')
-    }
-  }).reduce((o, s) => {
-    assign(o, s.keys, s.value);
-    return o;
-  }, {})
-}
-
-// get JSON data from Qordoba
+// get JSON data from Qordoba (new one)
 const getJsonFromQordoba = (languageId, fileId, milestoneId) => {
-  const url = `https://api.qordoba.com/v2/files/value_by_key`;
+  const url = `https://api.qordoba.com/v2/files/json`;
   const options = {
     method: 'GET',
     url: url,
@@ -389,7 +366,10 @@ const getJsonFromQordoba = (languageId, fileId, milestoneId) => {
   }
 
   return rp(options)
-    .then(body => buildJsonObject(JSON.parse(body)))
+    .then(body => {
+      console.log('type of body', typeof body);
+      return JSON.parse(body);
+    })
     .catch( ({ body }) => console.log(body) );
 }
 
