@@ -5,7 +5,7 @@ var fs = require('fs-extra')
 var _Q = require('./../lib/Qordoba')._funcs()
 
 // set some mock globals to refer to
-const pathToQordobaLocales = './test/locales/qordoba';
+const qLocalesPath = './test/locales/qordoba';
 const pathToSourceLanguage = './test/locales/i18next/en';
 const sourceLanguageDir = './test/locales/qordoba/en';
 const mockFileData = {
@@ -35,7 +35,7 @@ describe('initialization', () => {
 
     // initialize direcotires for tests
     const initialize = _Q.initialize.bind(this);
-    initialize(pathToQordobaLocales, pathToSourceLanguage);
+    initialize(qLocalesPath, pathToSourceLanguage);
 
     // wait for directories to be created
     setTimeout(done, 1000)
@@ -59,21 +59,21 @@ describe('upload', () => {
   it('write file data to fs', () => {
     const { writeFileData } = _Q;
     // write some fake data to fs
-    writeFileData(mockFileData, pathToQordobaLocales);
+    writeFileData(mockFileData, qLocalesPath);
 
-    const fileData = fs.readFileSync(`${pathToQordobaLocales}/files/fileData.json`, 'utf8')
+    const fileData = fs.readFileSync(`${qLocalesPath}/files/fileData.json`, 'utf8')
     expect(fileData).to.eql(JSON.stringify(mockFileData, null, 2))
   })
 
   it('read fileData', () => {
     const { getFileData } = _Q;
-    const data = getFileData(pathToQordobaLocales);
+    const data = getFileData(qLocalesPath);
     expect(data).to.eql(mockFileData)
   })
 
   it('get file id', () => {
     const { getFileId } = _Q;
-    const id = getFileId('test.json', pathToQordobaLocales);
+    const id = getFileId('test.json', qLocalesPath);
     expect(id).to.eql(736287)
   })
 
@@ -84,10 +84,10 @@ describe('upload', () => {
     const filepath = `${pathToSourceLanguage}/${file}`;
 
     // add file data to fileData.json
-    addFileData(file, fileId, filepath, pathToQordobaLocales, sourceLanguageDir);
+    addFileData(file, fileId, filepath, qLocalesPath, sourceLanguageDir);
 
     // make sure file data has been added correctly
-    const fileData = JSON.parse(fs.readFileSync(`${pathToQordobaLocales}/files/fileData.json`, 'utf8'))
+    const fileData = JSON.parse(fs.readFileSync(`${qLocalesPath}/files/fileData.json`, 'utf8'))
     const checkId = fileData[file].fileId;
     const checkPath = fileData[file].filepath;
     expect(fileId === checkId && filepath === checkPath).to.eql(true);
@@ -98,21 +98,21 @@ describe('upload', () => {
 describe('download', () => {
   it('write target language dir', () => {
     const { writeDirectory } = _Q;
-    writeDirectory('da', pathToQordobaLocales);
-    const exists = fs.existsSync(`${pathToQordobaLocales}/da`);
+    writeDirectory('da', qLocalesPath);
+    const exists = fs.existsSync(`${qLocalesPath}/da`);
     expect(exists).to.eql(true)
   })
   // getTargetData
   it('get target data ', () => {
     const { getTargetData } = _Q;
-    const data = getTargetData(pathToQordobaLocales);
+    const data = getTargetData(qLocalesPath);
     expect(data).to.eql({})
   })
   // writeTargetData
   it('write target data ', () => {
     const { writeTargetData, getTargetData } = _Q;
-    writeTargetData(mockTargetData, pathToQordobaLocales);
-    const checkData = getTargetData(pathToQordobaLocales);
+    writeTargetData(mockTargetData, qLocalesPath);
+    const checkData = getTargetData(qLocalesPath);
     expect(checkData).to.eql(mockTargetData)
   })
   // buildJsonObject
@@ -125,14 +125,9 @@ describe('download', () => {
   // writeNewTimestamp
   it('write new timestamp to targetData', () => {
     const { writeNewTimestamp, getTargetData } = _Q;
-    writeNewTimestamp('es', 'common.json', 1984, pathToQordobaLocales);
-    const checkTimestamp = getTargetData(pathToQordobaLocales)['es']['common.json'];
+    writeNewTimestamp('es', 'common.json', 1984, qLocalesPath);
+    const checkTimestamp = getTargetData(qLocalesPath)['es']['common.json'];
     expect(checkTimestamp).to.eql(1984)
-  })
-
-  it('testLog', () => {
-    const { testLog } = _Q;
-    testLog()
   })
 
 });

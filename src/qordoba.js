@@ -8,53 +8,47 @@ GLOBAL VARIABLES
 ===================================
 */
 
-let i18n, projectId, organizationId, xAuthToken, consumerKey, pathToQordobaLocales, pathToSourceLanguage, milestoneId, syncTargetLanguageFiles;
+let i18n, projectId, organizationId, xAuthToken, consumerKey, qordobaPath, i18nPath, milestoneId, syncInterval;
 const FILE_TYPE = 'JSON';
 const FILE_VERSION = '4.22';
 const MILESTONE = 'Translating';
 const DOWNLOAD_BUFFER = 10000;
-let sourceLanguageDir;
+let sourceLangDir;
 /*
 ===================================
 INITIALIZE
 ===================================
 */
-const testLog = () => {
-  console.log('SWEET!!!')
-  console.log( "Env( test ): %s", process.env.tests )
-  console.log(process.env.tests === 'running')
-}
 
-const initialize = (pathToQordobaLocales, pathToSourceLanguage) => {
+const initialize = (qordobaPath, i18nPath) => {
   // make sure qordoba files dir exists
-  if (!fs.existsSync(pathToQordobaLocales)) {
-    fs.mkdirSync(pathToQordobaLocales);
+  if (!fs.existsSync(qordobaPath)) {
+    fs.mkdirSync(qordobaPath);
   }
 
   // make sure qordoba files dir exists
-  const filesDir = `${pathToQordobaLocales}/files`
+  const filesDir = `${qordobaPath}/files`
   if (!fs.existsSync(filesDir)) {
     fs.mkdirSync(filesDir);
   }
 
   // make sure store exists
-  const fileData = `${pathToQordobaLocales}/files/fileData.json`
+  const fileData = `${qordobaPath}/files/fileData.json`
   if (!fs.existsSync(fileData)) {
     fs.writeFileSync(fileData, JSON.stringify({}));
   }
 
-
   // make sure source language dir exists in a qordoba locales
-  const sourceLang = pathToSourceLanguage.split('/').slice(-1)[0];
-  sourceLanguageDir = `${pathToQordobaLocales}/${sourceLang}`;
-  const targetDir = `${pathToQordobaLocales}/${sourceLang}`;
+  const sourceLang = i18nPath.split('/').slice(-1)[0];
+  sourceLangDir = `${qordobaPath}/${sourceLang}`;
+  const targetDir = `${qordobaPath}/${sourceLang}`;
 
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir);
     // copy source langage files into qordoba folder
-    const files = fs.readdirSync(pathToSourceLanguage);
-    const oldPaths = files.map(f => `${pathToSourceLanguage}/${f}`);
-    const newPaths = files.map(f => `${pathToQordobaLocales}/${sourceLang}/${f}`);
+    const files = fs.readdirSync(i18nPath);
+    const oldPaths = files.map(f => `${i18nPath}/${f}`);
+    const newPaths = files.map(f => `${qordobaPath}/${sourceLang}/${f}`);
 
     return Promise.all( files.map( (f, i) => {
       return fsp.createReadStream( oldPaths[i] ).pipe( fsp.createWriteStream( newPaths[i] ) );
@@ -62,8 +56,8 @@ const initialize = (pathToQordobaLocales, pathToSourceLanguage) => {
   }
 
   // start watcher for source files
-  console.log('Watching source files directory:', sourceLanguageDir)
-  watchSourceFiles(sourceLanguageDir)
+  console.log('Watching source files directory:', sourceLangDir)
+  watchSourceFiles(sourceLangDir)
 
   return Promise.resolve();
 }
@@ -85,7 +79,6 @@ const watchSourceFiles = (path) => {
     console.log('Source files changed. Uploading to qordoba')
     console.log('NEED TO ALSO COPY CHANGES OVER TO i18n source dir')
     syncSourceFiles();
-    if (stats) console.log(`File ${path} changed size to ${stats.size}`);
   });
 }
 
@@ -110,41 +103,41 @@ UPLOAD / UPDATE SOURCE FILES
 /////////////////////////
 
 // gets files from english locales
-const getFiles = (sourceLanguageDir) => {
-  return fsp.readdir(sourceLanguageDir)
+const getFiles = (sourceLangDir) => {
+  return fsp.readdir(sourceLangDir);
 }
 
 // gets file metadata from fs
-const getFileData = (pathToQordobaLocales) => {
-  const path = `${pathToQordobaLocales}/files/fileData.json`;
+const getFileData = (qordobaPath) => {
+  const path = `${qordobaPath}/files/fileData.json`;
   return JSON.parse(fs.readFileSync(path, 'utf8'));
 }
 
 // write file metadata to fs
-const writeFileData = (data, pathToQordobaLocales) => {
-  const path = `${pathToQordobaLocales}/files/fileData.json`;
+const writeFileData = (data, qordobaPath) => {
+  const path = `${qordobaPath}/files/fileData.json`;
   return fs.writeFileSync(path, JSON.stringify(data, null, 2))
 }
 
 // gets file id from filename
-const getFileId = (file, pathToQordobaLocales) => {
-  const data = getFileData(pathToQordobaLocales);
+const getFileId = (file, qordobaPath) => {
+  const data = getFileData(qordobaPath);
   return data[file]['fileId'];
 }
 
 // gets timestamp of file
-const getTimestamp = (file, sourceLanguageDir) => {
-  const path = `${sourceLanguageDir}/${file}`;
+const getTimestamp = (file, sourceLangDir) => {
+  const path = `${sourceLangDir}/${file}`;
   const stats = fs.statSync(path)
   return stats.mtime.valueOf();
 }
 
 // adds file metadata after successful file upload
-const addFileData = (file, fileId, filepath, pathToQordobaLocales, sourceLanguageDir) => {
-  const data = getFileData(pathToQordobaLocales);
-  const lastModified = getTimestamp(file, sourceLanguageDir);
+const addFileData = (file, fileId, filepath, qordobaPath, sourceLangDir) => {
+  const data = getFileData(qordobaPath);
+  const lastModified = getTimestamp(file, sourceLangDir);
   data[file] = { fileId, lastModified, filepath }
-  return writeFileData(data, pathToQordobaLocales);
+  return writeFileData(data, qordobaPath);
 }
 
 // handles upload process
@@ -153,12 +146,7 @@ const uploadAndPost = (filepath, type, versionTag) => {
     method: 'POST',
     url: 'https://devapi.qordoba.com/v2/files/upload',
     qs: { type },
-    headers: { 
-      versionTag: `${versionTag}`,
-      projectid: `${projectId}`,
-      organizationid: `${organizationId}`,
-      consumerkey: `${consumerKey}`,
-      'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' },
+    headers: { versionTag, projectId, organizationId, consumerKey, 'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' },
     formData: { 
       file: fsp.createReadStream(filepath),
       file_names: '[]'
@@ -173,17 +161,19 @@ const uploadAndPost = (filepath, type, versionTag) => {
 // adds file to upload promise queue
 const addToUploadQueue = (file) => {
   console.log('Adding', file, 'to upload queue');
+  const path = `${sourceLangDir}/${file}`;
+
   uploadQueueLength += 1;
-  const path = `${sourceLanguageDir}/${file}`;
+
   uploadQueue = uploadQueue.then(() => {
     return delay(7000)
       .then(() => uploadAndPost(path, FILE_TYPE, FILE_VERSION))
       .then( fileId => {
         console.log(`Successfully uploaded ${file}`);
-        addFileData(file, fileId, path, pathToQordobaLocales, sourceLanguageDir);
+        addFileData(file, fileId, path, qordobaPath, sourceLangDir);
         setTimeout(() => uploadQueueLength -= 1, DOWNLOAD_BUFFER);
       })
-      .catch( err => console.log(err) )
+      .catch( ({ body }) => console.log(body) );
   })
 }
 
@@ -191,87 +181,51 @@ const addToUploadQueue = (file) => {
 ///// UPDATE METHODS /////
 /////////////////////////
 
-// handles first part of update process
 const updateFile = (fileId, filePath) => {
   var options = { 
     method: 'POST',
-    url: `https://app.qordoba.com/api/projects/${projectId}/files/${fileId}/update/upload`,
-    headers: { 
-       'x-auth-token': '2c116052-e424-421f-aa72-b50e9291fe10',
-       'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' },
+    url: `https://api.qordoba.com/v2/files/update`,
+    headers: { fileId, projectId, consumerKey, 'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' },
     formData: { 
       file: fsp.createReadStream(filePath)
     }
   }
 
   return rp(options)
-  .then((body) => {
-    const { id } = JSON.parse(body);
-    return id;
-  })
-  .catch(err => console.log(err))
-}
-
-// handles second part of update process
-const postFile = (fileId, newFileId) => {
-  const payload = {
-    'new_file_id': `${newFileId}`,
-    'keep_in_project': false 
-  };
-
-  var options = { 
-    method: 'PUT',
-    url: `https://app.qordoba.com/api/projects/${projectId}/files/${fileId}/update/apply`,
-    headers: { 
-       'content-type': 'application/json',
-       'x-auth-token': '2c116052-e424-421f-aa72-b50e9291fe10' },
-    body: payload,
-    json: true 
-  };
-
-  return rp(options)
-  .then( body => body )
+  .then( body => JSON.parse(body).files_ids[0] )
   .catch( err => console.log(err) )
-}
-
-// handles update process
-const updateAndPostFile = (fileId, filePath) => {
-  return updateFile(fileId, filePath)
-      .then((newFileId) => {
-    return postFile(fileId, newFileId)
-      .catch( err => console.log(err) )
-  })
 }
 
 // adds file to update promise queue
 const addToUpdateQueue = (file) => {
   console.log('Adding', file, 'to update queue')
+  const id = getFileId(file, qordobaPath);
+  const path = `${sourceLangDir}/${file}`;
+
   updateQueueLength += 1;
-  const id = getFileId(file, pathToQordobaLocales);
-  const path = `${sourceLanguageDir}/${file}`;
+
   updateQueue = updateQueue.then(() => {
     return delay(7000)
-      .then(() => updateAndPostFile(id, path))
-      .then( (success) => {
+      .then(() => updateFile(id, path))
+      .then( (fileId) => {
         console.log(`Successfully updated ${file}`);
-        const fileId = success.files_ids[0];
-        addFileData(file, fileId, path, pathToQordobaLocales, sourceLanguageDir);
+        addFileData(file, fileId, path, qordobaPath, sourceLangDir);
         setTimeout(() => updateQueueLength -= 1, DOWNLOAD_BUFFER);
       })
-      .catch( err => console.log(err) );
+      .catch( ({ body }) => console.log(body) );
   })
 }
 
 // this function checks for new uploads / updates
 // queues for update / upload
 const syncSourceFiles = () => {
-  const data = getFileData(pathToQordobaLocales);
+  const data = getFileData(qordobaPath);
 
-  return getFiles(sourceLanguageDir).then((files) => {
+  return getFiles(sourceLangDir).then((files) => {
     const promise = Promise.resolve();
 
     files.forEach((file) => {
-      const timestamp = getTimestamp(file, sourceLanguageDir);
+      const timestamp = getTimestamp(file, sourceLangDir);
       const currentFile = data[file];
       
       if (currentFile === undefined) {
@@ -296,8 +250,8 @@ const writeFile = (path, data) => {
 }
 
 // write target language directories
-const writeDirectory = (lang, pathToQordobaLocales) => {
-  const filesDir = `${pathToQordobaLocales}/${lang}`
+const writeDirectory = (lang, qordobaPath) => {
+  const filesDir = `${qordobaPath}/${lang}`
   if (!fs.existsSync(filesDir)) {
     fs.mkdirSync(filesDir);
   }
@@ -305,10 +259,9 @@ const writeDirectory = (lang, pathToQordobaLocales) => {
 
 // get target language ids and codes
 const getTargetLangs = () => {
-  const getLanguageURL = `https://api.qordoba.com/v2/projects/detail`;
   const options = {
     method: 'GET',
-    url: getLanguageURL,
+    url: 'https://api.qordoba.com/v2/projects/detail',
     headers: { consumerKey, projectId },
   };
 
@@ -326,7 +279,7 @@ const getTargetLangs = () => {
 
 // get namespaces and fileIds
 const getNamespaces = () => {
-  const data = getFileData(pathToQordobaLocales);
+  const data = getFileData(qordobaPath);
   const files = Object.keys(data);
   return files.map(file => {
     return {
@@ -342,20 +295,20 @@ const getMilestoneId = () => {
     url: `https://api.qordoba.com/v2/projects/workflow`,
     headers: { consumerKey, projectId },
   }
+
   return rp(options)
   .then(body => {
-  const id = JSON.parse(body).milestones
-    .filter(milestone => milestone.milestoneName === MILESTONE)[0].milestoneId;
-    // set to global
-    milestoneId = id;
-    return id;
+    const milestones = JSON.parse(body).milestones
+    // set to global to limit API calls
+    milestoneId = milestones.filter(ms => ms.milestoneName === MILESTONE)[0].milestoneId;
+    return milestoneId;
   })
   .catch(err => console.log(err))
 }
 
 // get target language metadata
-const getTargetData = (pathToQordobaLocales) => {
-  const targetData = `${pathToQordobaLocales}/files/targetData.json`
+const getTargetData = (qordobaPath) => {
+  const targetData = `${qordobaPath}/files/targetData.json`
   if (!fs.existsSync(targetData)) {
     fs.writeFileSync(targetData, JSON.stringify({}));
   }
@@ -364,31 +317,10 @@ const getTargetData = (pathToQordobaLocales) => {
 }
 
 // write target language metadata
-const writeTargetData = (data, pathToQordobaLocales) => {
-  const path = `${pathToQordobaLocales}/files/targetData.json`;
+const writeTargetData = (data, qordobaPath) => {
+  const path = `${qordobaPath}/files/targetData.json`;
   return fs.writeFileSync(path, JSON.stringify(data, null, 2))
 }
-
-// get fileids and timestamp from qordoba by languageId (old one)
-// const getQordobaTimestamps = (languageId) => {
-//   const getProjectFilesURL = `https://app.qordoba.com/api/projects/${projectId}/languages/${languageId}/page_settings/search`;
-//   const options = {
-//     method: 'POST',
-//     url: getProjectFilesURL,
-//     headers: { consumerKey, 'x-auth-token': xAuthToken },
-//     body: {},
-//     json: true
-//   }
-//   return rp(options)
-//     .then(body => {
-//       const obj = {};
-//       body.pages.forEach(({ page_id, update }) => {
-//         obj[page_id] = update;
-//       })
-//       return obj;
-//     })
-//   .catch(err => console.log(err))
-// }
 
 // get fileids and timestamp from qordoba by languageId (new One)
 const getQordobaTimestamps = (languageId) => {
@@ -407,7 +339,7 @@ const getQordobaTimestamps = (languageId) => {
       body.forEach( ({ fileId, updated }) => obj[fileId] = updated )
       return obj;
     })
-  .catch(err => console.log(err))
+  .catch( ({ body }) => console.log(body) );
 }
 
 // get all Qordoba timestamps
@@ -458,15 +390,15 @@ const getJsonFromQordoba = (languageId, fileId, milestoneId) => {
 
   return rp(options)
     .then(body => buildJsonObject(JSON.parse(body)))
-    .catch(err => console.log(err))
+    .catch( ({ body }) => console.log(body) );
 }
 
 // write new timestamp value to target language metadata
-const writeNewTimestamp = (lg, ns, newTimestamp, pathToQordobaLocales) => {
-  const data = getTargetData(pathToQordobaLocales);
+const writeNewTimestamp = (lg, ns, newTimestamp, qordobaPath) => {
+  const data = getTargetData(qordobaPath);
   if (data[lg] === undefined) { data[lg] = {}; };
   data[lg][ns] = newTimestamp;
-  writeTargetData(data, pathToQordobaLocales);
+  writeTargetData(data, qordobaPath);
 }
 
 // reload resources after downlaod
@@ -482,19 +414,20 @@ const reloadResources = (lg, ns) => {
 }
 
 // handle download process
-const processDownload = (lg, langId, ns, fileId, newTimestamp, milestoneId, pathToQordobaLocales) => {
-  const path = `${pathToQordobaLocales}/${lg}/${ns}`;
+const processDownload = (lg, langId, ns, fileId, newTimestamp, milestoneId, qordobaPath) => {
+  const path = `${qordobaPath}/${lg}/${ns}`;
   // set to true in currentDownloads
   currentDownloads[`${lg|ns}`] = true;
   return getJsonFromQordoba(langId, fileId, milestoneId)
     .then((data) => {
       writeFile(path, data);
-      writeNewTimestamp(lg, ns, newTimestamp, pathToQordobaLocales);
-      console.log(`Finished download for namespace: ${ns} for language: ${lg}`)
+      writeNewTimestamp(lg, ns, newTimestamp, qordobaPath);
       // reload resources for i18n instance after downlaod
       reloadResources(lg, ns);
       // remove from currentDownloads
       currentDownloads[`${lg|ns}`] = false;
+
+      console.log(`Finished download for namespace: ${ns} for language: ${lg}`)
     })
 }
 
@@ -507,7 +440,7 @@ const syncTargetFiles = () => {
 
   console.log('Syncing target language files');
   const files = getNamespaces();
-  const data = getTargetData(pathToQordobaLocales);
+  const data = getTargetData(qordobaPath);
   let languages;
 
   // getMilestoneId sets a global variable, so we only make the call once
@@ -520,7 +453,7 @@ const syncTargetFiles = () => {
     languages.forEach( ({ lg, langId }) => {
       if ( data[lg] === undefined ) { data[lg] = {}; };
 
-      writeDirectory(lg, pathToQordobaLocales);
+      writeDirectory(lg, qordobaPath);
       files.forEach( ({ ns, fileId }) => {
         if ( data[lg][ns] === undefined ) { data[lg][ns] = null };
 
@@ -530,7 +463,7 @@ const syncTargetFiles = () => {
         // check timestamps and make sure file isn't currently being downloaded
         if (fsTimestamp !== qTimestamp && !currentDownloads[`${lg}|${ns}`]) {
           console.log(`Downloading namespace: ${ns} for language: ${lg} with fileID: ${fileId}`)
-          processDownload( lg, langId, ns, fileId, qTimestamp, milestoneId, pathToQordobaLocales )
+          processDownload( lg, langId, ns, fileId, qTimestamp, milestoneId, qordobaPath )
         }
       })
     })
@@ -548,13 +481,13 @@ export function initQordoba(options, i18next) {
   projectId = options.projectId;
   xAuthToken = options.xAuthToken;
   consumerKey = options.consumerKey; 
-  pathToQordobaLocales = options.loadPath.split('/').slice(0, -2).join('/');
-  pathToSourceLanguage = options.pathToSourceLanguage;
-  syncTargetLanguageFiles = options.syncTargetLanguageFiles;
+  qordobaPath = options.loadPath.split('/').slice(0, -2).join('/');
+  i18nPath = options.i18nPath;
+  syncInterval = options.syncInterval;
   i18n = i18next;
 
   // initialize file structure
-  initialize(pathToQordobaLocales, pathToSourceLanguage)
+  initialize(qordobaPath, i18nPath)
   .then(() => {
     // syncSourceFiles
     return syncSourceFiles()
@@ -562,7 +495,7 @@ export function initQordoba(options, i18next) {
   .then(() => {
 
     // handle interval
-    const { interval, seconds } = syncTargetLanguageFiles;
+    const { interval, seconds } = syncInterval;
     if (interval === true) {
       console.log('Setting interval of', seconds, 'seconds')
       setInterval( syncTargetFiles, seconds * 1000 )
@@ -577,7 +510,6 @@ export function initQordoba(options, i18next) {
 // export private methods for testing
 export function _funcs() {
   return {
-    testLog,
     initialize,
     delay,
     watchSourceFiles,
