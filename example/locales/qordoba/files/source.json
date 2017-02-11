@@ -1,0 +1,12 @@
+{
+  "common.json": {
+    "fileId": 738286,
+    "lastModified": 1486598255000,
+    "filepath": "./locales/i18next/en/common.json"
+  },
+  "jumbo.json": {
+    "fileId": 738287,
+    "lastModified": 1486023307000,
+    "filepath": "./locales/i18next/en/jumbo.json"
+  }
+}

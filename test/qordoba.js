@@ -8,7 +8,7 @@ var _Q = require('./../lib/Qordoba')._funcs()
 const qLocalesPath = './test/locales/qordoba';
 const pathToSourceLanguage = './test/locales/i18next/en';
 const sourceLanguageDir = './test/locales/qordoba/en';
-const mockFileData = {
+const mockSourceData = {
   "test.json": {
     "fileId": 736287,
     "lastModified": 1486429899000,
@@ -59,16 +59,16 @@ describe('upload', () => {
   it('write file data to fs', () => {
     const { writeFileData } = _Q;
     // write some fake data to fs
-    writeFileData(mockFileData, qLocalesPath);
+    writeFileData(mockSourceData, qLocalesPath);
 
-    const fileData = fs.readFileSync(`${qLocalesPath}/files/fileData.json`, 'utf8')
-    expect(fileData).to.eql(JSON.stringify(mockFileData, null, 2))
+    const fileData = fs.readFileSync(`${qLocalesPath}/files/source.json`, 'utf8')
+    expect(fileData).to.eql(JSON.stringify(mockSourceData, null, 2))
   })
 
   it('read fileData', () => {
     const { getFileData } = _Q;
     const data = getFileData(qLocalesPath);
-    expect(data).to.eql(mockFileData)
+    expect(data).to.eql(mockSourceData)
   })
 
   it('get file id', () => {
@@ -83,11 +83,11 @@ describe('upload', () => {
     const fileId = 111111;
     const filepath = `${pathToSourceLanguage}/${file}`;
 
-    // add file data to fileData.json
+    // add file data to source.json
     addFileData(file, fileId, filepath, qLocalesPath, sourceLanguageDir);
 
     // make sure file data has been added correctly
-    const fileData = JSON.parse(fs.readFileSync(`${qLocalesPath}/files/fileData.json`, 'utf8'))
+    const fileData = JSON.parse(fs.readFileSync(`${qLocalesPath}/files/source.json`, 'utf8'))
     const checkId = fileData[file].fileId;
     const checkPath = fileData[file].filepath;
     expect(fileId === checkId && filepath === checkPath).to.eql(true);
@@ -115,13 +115,7 @@ describe('download', () => {
     const checkData = getTargetData(qLocalesPath);
     expect(checkData).to.eql(mockTargetData)
   })
-  // buildJsonObject
-  it('build json object from server data ', () => {
-    const { buildJsonObject } = _Q;
-    const body = JSON.parse(fs.readFileSync('./test/mockData/body.json', 'utf8'));
-    const jsonObject = buildJsonObject(body)
-    expect(jsonObject.multiplePluralForms.key_0).to.eql('Cero')
-  })
+
   // writeNewTimestamp
   it('write new timestamp to targetData', () => {
     const { writeNewTimestamp, getTargetData } = _Q;

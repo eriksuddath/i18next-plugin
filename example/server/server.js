@@ -33,7 +33,10 @@ i18next
     consumerKey: 'ooGM5l9ojTag4osd7V72SPaxmjtyH8Ww',
 
     // path to project source language in i18next locales folder
-    i18nPath: './locales/i18next/en',
+    i18nPath: './locales/i18next',
+
+    // source language for project
+    sourceLanguage: 'en',
 
     // provide an optional interval to sync target language files
     syncInterval: { interval: true, seconds: 10 }
