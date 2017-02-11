@@ -85,6 +85,48 @@ const watchSourceFiles = (path) => {
   });
 }
 
+const getMostRecentFileIds = (languageId) => {
+  var options = { 
+    method: 'POST',
+    url: 'https://api.qordoba.com/v2/files/list',
+    headers: 
+     { consumerKey, languageId, projectId, 'content-type': 'application/json' },
+    body: {},
+    json: true 
+  };
+
+  return rp(options)
+    .then(body => {
+      return body.reduce((obj, { fileName, fileId, updated}) => {
+        if (obj[fileName] === undefined) { obj[fileName] = { updated, fileId }; }
+        
+        if (updated > obj[fileName]['updated']) {
+          obj[fileName] = { updated, fileId };
+        }
+        
+        return obj
+      }, {})
+    })
+  .catch( ({ body }) => console.log(body) );
+}
+
+const updateToRecentTargetData = () => {
+  return getTargetLangs()
+  .then((languages) => {
+    languages.forEach(({ lg, langId }) => {
+      getMostRecentFileIds(langId).then((files) => {
+        const filenames = Object.keys(files);
+        filenames.forEach((file) => {
+          const { fileId, updated } = files[file];
+          // add a fake timestamp so new files will download
+          console.log('still need to handle case where name doesnt exist in source file')
+          updateTimestamp(lg, file, 0);
+        })
+      })
+    })
+  })
+}
+
 const initialize = (qordobaPath, i18nPath) => {
   // make sure qordoba files dir exists
   makeDirectory(qordobaPath);
@@ -112,7 +154,7 @@ const initialize = (qordobaPath, i18nPath) => {
   // start watcher for source files
   watchSourceFiles(sourceFiles)
 
-  return Promise.resolve();
+  return updateToRecentTargetData();
 }
 
 /*
@@ -134,7 +176,7 @@ const writeSourceData = (data) => {
 }
 
 // adds file metadata after successful file upload
-const updateSourceData = (file, fileId, filepath, qordobaPath, sourceFiles) => {
+const updateSourceData = (file, fileId, filepath) => {
   const data = getSourceData(qordobaPath);
   const lastModified = getTimestamp(file, sourceFiles);
   data[file] = { fileId, lastModified, filepath }
@@ -158,7 +200,8 @@ const writeTargetData = (data, qordobaPath) => {
 }
 
 // update target file timestamp
-const updateTimestamp = (lg, ns, newTimestamp, qordobaPath) => {
+const updateTimestamp = (lg, ns, newTimestamp) => {
+  console.log('updating timestamp', lg, ns, newTimestamp);
   const data = getTargetData(qordobaPath);
   if (data[lg] === undefined) { data[lg] = {}; };
   data[lg][ns] = newTimestamp;
@@ -412,6 +455,7 @@ const downloadFile = (lg, langId, ns, fileId, newTimestamp, milestoneId, qordoba
 
 // sync all target language files
 const syncTargetFiles = () => {
+  console.log('syncTargetFiles')
   if (checkQueuesForItems()) { return; }
 
   const files = getTargetFiles();
