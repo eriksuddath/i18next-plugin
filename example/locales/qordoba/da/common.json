@@ -1,0 +1,45 @@
+{
+  "basic": {
+    "key": "",
+    "keyDeep": {
+      "inner": ""
+    }
+  },
+  "interpolation": {
+    "key": "",
+    "keyEscaped": "",
+    "keyUnescaped": "",
+    "keyDeep": "",
+    "keyDifferent": ""
+  },
+  "nesting": {
+    "nesting3": "",
+    "girlsAndBoys": "",
+    "girlsAndBoys_plural": "",
+    "girls": "",
+    "girls_plural": "",
+    "key1": "",
+    "key2": ""
+  },
+  "singularPlural": {
+    "key": "",
+    "key_plural": "",
+    "keyWithCount": "",
+    "keyWithCount_plural": ""
+  },
+  "multiplePluralForms": {
+    "key_0": "",
+    "key_1": "",
+    "key_2": "",
+    "key_3": "",
+    "key_4": "",
+    "key_5": ""
+  },
+  "context": {
+    "friend": "",
+    "friend_male": "",
+    "friend_female": "",
+    "friend_male_plural": "",
+    "friend_female_plural": ""
+  }
+}
