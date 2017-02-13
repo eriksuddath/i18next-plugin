@@ -1,12 +1,10 @@
 {
-  "es": {
-    "jumbo.json": 1486776858000,
-    "common.json": 1486776849000,
-    "demo-en-us.json": 0
-  },
   "da": {
-    "jumbo.json": 1486776858000,
-    "common.json": 1486776849000,
-    "demo-en-us.json": 0
+    "jumbo.json": 1487015275000,
+    "common.json": 1487014026000
+  },
+  "es": {
+    "jumbo.json": 1487015275000,
+    "common.json": 1487014026000
   }
 }

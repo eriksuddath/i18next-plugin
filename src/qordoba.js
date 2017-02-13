@@ -2,6 +2,7 @@ import fs from 'fs';
 import rp from 'request-promise';
 import fsp from 'fs-promise';
 import chokidar from 'chokidar';
+import mergedirs from 'merge-dirs';
 /*
 ===================================
 GLOBAL VARIABLES
@@ -71,60 +72,24 @@ const delay = (t) => {
   });
 }
 
-const watchSourceFiles = (path) => {
-  console.log('Watching source files directory:', path)
-  var watcher = chokidar.watch(path, {
+const watchSourceFiles = (sourcepath, target) => {
+  console.log('Watching source files directory:', sourcepath)
+  var watcher = chokidar.watch(sourcepath, {
     ignored: /[\/\\]\./,
     persistent: true
   });
 
+  
+
   watcher.on('change', (path, stats) => {
     console.log('Source files changed. Uploading to qordoba')
-    console.log('NEED TO ALSO COPY CHANGES OVER TO i18n source dir')
     syncSourceFiles();
+
+    console.log('mgerging changes into qordoba directory');
+    console.log(path, target, process.cwd())
+    // merge changes into qordoba folder
+    mergedirs(sourcepath, target, 'overwrite');
   });
-}
-
-const getMostRecentFileIds = (languageId) => {
-  var options = { 
-    method: 'POST',
-    url: 'https://api.qordoba.com/v2/files/list',
-    headers: 
-     { consumerKey, languageId, projectId, 'content-type': 'application/json' },
-    body: {},
-    json: true 
-  };
-
-  return rp(options)
-    .then(body => {
-      return body.reduce((obj, { fileName, fileId, updated}) => {
-        if (obj[fileName] === undefined) { obj[fileName] = { updated, fileId }; }
-        
-        if (updated > obj[fileName]['updated']) {
-          obj[fileName] = { updated, fileId };
-        }
-        
-        return obj
-      }, {})
-    })
-  .catch( ({ body }) => console.log(body) );
-}
-
-const updateToRecentTargetData = () => {
-  return getTargetLangs()
-  .then((languages) => {
-    languages.forEach(({ lg, langId }) => {
-      getMostRecentFileIds(langId).then((files) => {
-        const filenames = Object.keys(files);
-        filenames.forEach((file) => {
-          const { fileId, updated } = files[file];
-          // add a fake timestamp so new files will download
-          console.log('still need to handle case where name doesnt exist in source file')
-          updateTimestamp(lg, file, 0);
-        })
-      })
-    })
-  })
 }
 
 const initialize = (qordobaPath, i18nPath) => {
@@ -152,9 +117,11 @@ const initialize = (qordobaPath, i18nPath) => {
   }
 
   // start watcher for source files
-  watchSourceFiles(sourceFiles)
+  watchSourceFiles(sourceFiles, sourceTarget)
 
-  return updateToRecentTargetData();
+  // set milestoneId globally
+  console.log('calling get milestoneId')
+  return Promise.resolve();
 }
 
 /*
@@ -354,6 +321,7 @@ const getTargetFiles = () => {
 
 // get id of specified milestone (new one)
 const getMilestoneId = () => {
+  console.log('calling getMilestoneId')
   const options = {
     url: `https://api.qordoba.com/v2/projects/workflow`,
     headers: { consumerKey, projectId },
@@ -364,47 +332,17 @@ const getMilestoneId = () => {
     const milestones = JSON.parse(body).milestones
     // set to global to limit API calls
     milestoneId = milestones.filter(ms => ms.milestoneName === MILESTONE)[0].milestoneId;
+    console.log('milestones', milestones);
+    console.log('milestoneId', milestoneId)
     return milestoneId;
   })
   .catch(err => console.log(err))
 }
 
-// get fileids and timestamp from qordoba by languageId (new One)
-const getQordobaTimestamps = (languageId) => {
-  var options = { 
-    method: 'POST',
-    url: 'https://api.qordoba.com/v2/files/list',
-    headers: 
-     { consumerKey, languageId, projectId, 'content-type': 'application/json' },
-    body: {},
-    json: true 
-  };
-
-  return rp(options)
-    .then(body => {
-      const obj = {};
-      body.forEach( ({ fileId, updated }) => obj[fileId] = updated )
-      return obj;
-    })
-  .catch( ({ body }) => console.log(body) );
-}
-
-// get all Qordoba timestamps
-const getAllQordobaTimestamps = (languages, files) => {
-  const timestamps = [];
-  languages.forEach( ({ lg, langId }) => timestamps.push( getQordobaTimestamps(langId) ))
-  return Promise.all(timestamps).then((timestamps) => {
-    const obj = {};
-    timestamps.forEach((timestamp, idx) => {
-      const langId = languages[idx]['langId'];
-      obj[langId] = timestamp;
-    })
-    return obj;
-  })
-}
-
 // get JSON data from Qordoba (new one)
-const getJsonFromQordoba = (languageId, fileId, milestoneId) => {
+const getJsonFromQordoba = (languageId, fileId) => {
+  console.log('milestoneId', milestoneId);
+
   const url = `https://api.qordoba.com/v2/files/json`;
   const options = {
     method: 'GET',
@@ -438,56 +376,76 @@ const reloadResources = (lg, ns) => {
 }
 
 // handle download process
-const downloadFile = (lg, langId, ns, fileId, newTimestamp, milestoneId, qordobaPath) => {
+const downloadFile = (lg, langId, ns, fileId, newTimestamp) => {
+  if (milestoneId === undefined) {
+    console.log('no milestone id');
+    return;
+  }
   const path = `${qordobaPath}/${lg}/${ns}`;
   
   lockFile(lg, ns);
-  return getJsonFromQordoba(langId, fileId, milestoneId)
+  return getJsonFromQordoba(langId, fileId)
     .then((data) => {
-      console.log('Writing file data', data);
+      makeDirectory(`${qordobaPath}/${lg}`)
       writeFile(path, data, true);
-      updateTimestamp(lg, ns, newTimestamp, qordobaPath);
+      updateTimestamp(lg, ns, newTimestamp);
       reloadResources(lg, ns);
       unlockFile(lg, ns);
       console.log(`Downloaded namespace: ${ns} for language: ${lg}`)
     })
 }
 
-// sync all target language files
+// get most recent file copies from qordoba
+const getFilesFromQordoba = (languageId) => {
+  var options = { 
+    method: 'POST',
+    url: 'https://api.qordoba.com/v2/files/list',
+    headers: 
+     { consumerKey, languageId, projectId, 'content-type': 'application/json' },
+    body: {},
+    json: true 
+  };
+
+  return rp(options)
+    .then(body => {
+      return body.reduce((obj, { fileName, fileId, updated}) => {
+        if (obj[fileName] === undefined) { obj[fileName] = { updated, fileId }; }
+        
+        if (updated > obj[fileName]['updated']) {
+          obj[fileName] = { updated, fileId };
+        }
+        
+        return obj
+      }, {})
+    })
+  .catch( ({ body }) => console.log(body) );
+}
+
+// sync target files (new one)
 const syncTargetFiles = () => {
-  console.log('syncTargetFiles')
+  console.log('sync target files')
   if (checkQueuesForItems()) { return; }
 
-  const files = getTargetFiles();
-  const data = getTargetData();
-  let languages;
+  const targetData = getTargetData();
 
-  // get taget languages and milestoneId from qordoba
-  Promise.all([getTargetLangs(), milestoneId || getMilestoneId()])
+  getTargetLangs()
+  .then((languages) => {
 
-  // use languages to get timestamps for all qordoba files
-  .then( (result) => {
-    languages = result[0];
-    return getAllQordobaTimestamps(languages, files);
-  })
+    languages.forEach(({ lg, langId }) => {
 
-  // iterate through languages, compare timestamps, update if different
-  .then( (qTimestamps) => {
+      getFilesFromQordoba(langId)
+      .then((files) => {
+        const namespaces = Object.keys(files);
 
-    languages.forEach( ({ lg, langId }) => {
-      if ( data[lg] === undefined ) { data[lg] = {}; };
+        namespaces.forEach((ns) => {
+          const { fileId, updated } = files[ns];
+          const fsUpdated = targetData[lg] ? targetData[lg][ns] : '';
 
-      makeDirectory(`${qordobaPath}/${lg}`);
-      files.forEach( ({ ns, fileId }) => {
-        if ( data[lg][ns] === undefined ) { data[lg][ns] = null };
-
-        const qTimestamp = qTimestamps[langId][fileId];
-        const fsTimestamp = data[lg][ns];
-
-        // check timestamps and make sure file isn't currently being downloaded
-        if (fsTimestamp !== qTimestamp && !isLocked(lg, ns)) {
-          downloadFile( lg, langId, ns, fileId, qTimestamp, milestoneId, qordobaPath )
-        }
+          if (fsUpdated !== updated && !isLocked(lg, ns)) {
+            console.log('downloading lg:', lg, 'ns:', ns);
+            downloadFile(lg, langId, ns, fileId, updated)
+          }
+        })
       })
     })
   })
@@ -512,6 +470,9 @@ export function initQordoba(options, i18next) {
 
   // initialize file structure
   initialize(qordobaPath, i18nPath)
+  .then(() => {
+    getMilestoneId().then(msId => milestoneId = msId);
+  })
   .then(() => {
     syncSourceFiles()
     // handle interval
@@ -546,7 +507,6 @@ export function _funcs() {
     getMilestoneId,
     getTargetData,
     writeTargetData,
-    getQordobaTimestamps,
     getAllQordobaTimestamps,
     getJsonFromQordoba,
     updateTimestamp,

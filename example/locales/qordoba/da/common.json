@@ -2,44 +2,44 @@
   "basic": {
     "key": "",
     "keyDeep": {
-      "inner": "Indre værdi af en dyb nøgle"
+      "inner": ""
     }
   },
   "interpolation": {
-    "key": "{{what}} er {{how}}",
-    "keyEscaped": "Ingen fare {{myVar}}",
-    "keyUnescaped": "Farligt {{- myVar}}",
-    "keyDeep": "Jeg er {{author.what}}",
-    "keyDifferent": "__myVar__ er vigtigt"
+    "key": "",
+    "keyEscaped": "",
+    "keyUnescaped": "",
+    "keyDeep": "",
+    "keyDifferent": ""
   },
   "nesting": {
-    "nesting3": "3",
-    "girlsAndBoys": "$t (Nesting.girls,}}) {'count': {{girls} og dreng {{count}}",
-    "girlsAndBoys_plural": "$t (Nesting.girls,}}) {'count': {{girls} og drenge {{count}}",
-    "girls": "{{count}} pige",
-    "girls_plural": "{{count}} piger",
-    "key1": "Hej Verden!",
-    "key2": "Sige: {{val}}"
+    "nesting3": "",
+    "girlsAndBoys": "",
+    "girlsAndBoys_plural": "",
+    "girls": "",
+    "girls_plural": "",
+    "key1": "",
+    "key2": ""
   },
   "singularPlural": {
-    "key": "Vare",
-    "key_plural": "Emner",
-    "keyWithCount": "{{count}} Vare",
-    "keyWithCount_plural": "{{count}} emner"
+    "key": "",
+    "key_plural": "",
+    "keyWithCount": "",
+    "keyWithCount_plural": ""
   },
   "multiplePluralForms": {
-    "key_0": "Nul",
-    "key_1": "Ental",
-    "key_2": "To",
-    "key_3": "Få",
-    "key_4": "Mange",
-    "key_5": "Pluralis"
+    "key_0": "",
+    "key_1": "",
+    "key_2": "",
+    "key_3": "",
+    "key_4": "",
+    "key_5": ""
   },
   "context": {
-    "friend": "En ven",
-    "friend_male": "En kæreste",
-    "friend_female": "En kæreste",
-    "friend_male_plural": "{{count}} kærester",
-    "friend_female_plural": "{{count}} veninder"
+    "friend": "",
+    "friend_male": "",
+    "friend_female": "",
+    "friend_male_plural": "",
+    "friend_female_plural": ""
   }
 }

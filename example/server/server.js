@@ -24,10 +24,7 @@ i18next
     organizationId: 3036,
 
     // qordoba project id
-    projectId: 3711,
-
-    // xAuthToken => to be removed when API stabilizes
-    xAuthToken: '2c116052-e424-421f-aa72-b50e9291fe10',
+    projectId: 3768,
 
     // qordoba customer key
     consumerKey: 'ooGM5l9ojTag4osd7V72SPaxmjtyH8Ww',
