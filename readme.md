@@ -19,7 +19,7 @@ Example app scrips:
 	-npm start (to run server)
 
 
-Server is currently configured to point at i18next in example directory
+Server is currently configured to point at Xero-i18next in example directory
 
 plugin will automatically upload any changes made to source files in
 locales/i18next/en to qordoba project

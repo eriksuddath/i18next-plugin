@@ -24,10 +24,13 @@ i18next
     organizationId: 3036,
 
     // qordoba project id
-    projectId: 3768,
+    projectId: 'PROJECT_ID',
+
+    // id of workflow milestone to pull translations from
+    milestoneId: 'MILESTONE_ID',
 
     // qordoba customer key
-    consumerKey: 'ooGM5l9ojTag4osd7V72SPaxmjtyH8Ww',
+    consumerKey: 'CONSUMER_KEY',
 
     // path to project source language in i18next locales folder
     i18nPath: './locales/i18next',
@@ -36,7 +39,10 @@ i18next
     sourceLanguage: 'en',
 
     // provide an optional interval to sync target language files
-    syncInterval: { interval: true, seconds: 10 }
+    syncInterval: { interval: true, seconds: 10 },
+
+    // add debuger
+    debug: true
   }
 });
 
