@@ -144,9 +144,10 @@ const writeSourceData = (data) => {
 }
 
 // adds file metadata after successful file upload
-const updateSourceData = (file, fileId, filepath) => {
+const updateSourceData = (file, fileId) => {
   const data = getSourceData();
   const lastModified = getTimestamp(file, sourceFiles);
+  const filepath = `${sourceFiles}/${file}`;
   data[file] = { fileId, lastModified, filepath }
   return writeSourceData(data, qordobaPath);
 }
@@ -189,7 +190,7 @@ const getFileId = (file) => {
   return data[file]['fileId'];
 }
 
-// gets timestamp of file
+// gets timestamp of source file
 const getTimestamp = (file) => {
   const path = `${sourceFiles}/${file}`;
   const stats = fs.statSync(path)
@@ -252,7 +253,7 @@ const addToUploadQueue = (file) => {
       .then(() => uploadFile(path, FILE_TYPE, FILE_VERSION))
       .then( fileId => {
         logger(`Successfully uploaded ${file}`);
-        updateSourceData(file, fileId, path, qordobaPath, sourceFiles);
+        updateSourceData(file, fileId);
         setTimeout(() => decrementQueue('upload'), DOWNLOAD_BUFFER);
       })
       .catch( err => logger(`add to upload queue failed`, err) )
@@ -270,7 +271,7 @@ const addToUpdateQueue = (file) => {
       .then(() => updateFile(id, path))
       .then( (fileId) => {
         logger(`Successfully updated ${file}`);
-        updateSourceData(file, fileId, path, qordobaPath, sourceFiles);
+        updateSourceData(file, fileId);
         setTimeout(() => decrementQueue('update'), DOWNLOAD_BUFFER);
       })
       .catch( err => logger(`add to update queue failed`, err) )
@@ -496,7 +497,6 @@ export function _funcs(options) {
   // init options for test
   organizationId = options.organizationId;
   projectId = options.projectId;
-  xAuthToken = options.xAuthToken;
   consumerKey = options.consumerKey; 
   qordobaPath = options.loadPath.split('/').slice(0, -2).join('/');
   i18nPath = options.i18nPath;
@@ -506,28 +506,38 @@ export function _funcs(options) {
   debug = options.debug;
 
   return {
-    initialize,
+    incrementQueue,
+    decrementQueue,
+    checkQueuesForItems,
+    makeDirectory,
+    readDirectory,
+    writeFile,
+    pipeFile,
     delay,
     watchSourceFiles,
+    initialize,
     getSourceData,
-    writeFileData,
-    getFileId,
-    getTimestamp,
+    writeSourceData,
     updateSourceData,
-    uploadFile,
-    addToUploadQueue,
-    syncSourceFiles,
-    writeFile,
-    getTargetLangs,
-    getNamespaces,
-    getMilestoneId,
     getTargetData,
     writeTargetData,
-    getAllQordobaTimestamps,
-    getJsonFromQordoba,
     updateTimestamp,
+    getFileId,
+    getTimestamp,
+    uploadFile,
+    updateFile,
+    addToUploadQueue,
+    addToUpdateQueue,
+    syncSourceFiles,
+    getTargetLangs,
+    getTargetFiles,
+    getJsonFromQordoba,
+    lockFile,
+    unlockFile,
+    isLocked,
     reloadResources,
-    processDownload,
+    downloadFile,
+    getFilesFromQordoba,
     syncTargetFiles
   }
 }

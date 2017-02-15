@@ -24,13 +24,13 @@ i18next
     organizationId: 3036,
 
     // qordoba project id
-    projectId: 'PROJECT_ID',
+    projectId: 3792,
 
     // id of workflow milestone to pull translations from
-    milestoneId: 'MILESTONE_ID',
+    milestoneId: 8597,
 
     // qordoba customer key
-    consumerKey: 'CONSUMER_KEY',
+    consumerKey: 'ooGM5l9ojTag4osd7V72SPaxmjtyH8Ww',
 
     // path to project source language in i18next locales folder
     i18nPath: './locales/i18next',

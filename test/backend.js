@@ -1,7 +1,9 @@
 var expect = require('chai').expect;
 var fs = require('fs-extra');
 var Interpolator = require('i18next/dist/commonjs/Interpolator').default;
-var _Q = require('./../lib/Qordoba')._funcs();
+var configOptions = require('./testConfig');
+console.log(configOptions)
+var _Q = require('./../lib/Qordoba')._funcs(configOptions);
 
 // set some mock globals to refer to
 const pathToQordobaLocales = './test/locales/qordoba';
