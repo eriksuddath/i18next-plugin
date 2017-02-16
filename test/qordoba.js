@@ -1,18 +1,58 @@
-var expect = require('chai').expect;
-var fs = require('fs-extra')
+const expect = require('chai').expect;
+const fs = require('fs-extra');
+
+// import config options
+const configOptions = require('./testConfig');
+const { loadPath, i18nPath, sourceLanguage } = configOptions;
 
 // import qordoba to test private methods
-var _Q = require('./../lib/Qordoba')._funcs()
+const _Q = require('./../lib/Qordoba')._funcs(configOptions);
+const {     
+    incrementQueue,
+    decrementQueue,
+    checkQueuesForItems,
+    makeDirectory,
+    readDirectory,
+    writeFile,
+    pipeFile,
+    delay,
+    watchSourceFiles,
+    initialize,
+    getSourceData,
+    writeSourceData,
+    updateSourceData,
+    getTargetData,
+    writeTargetData,
+    updateTimestamp,
+    getFileId,
+    getTimestamp,
+    uploadFile,
+    updateFile,
+    addToUploadQueue,
+    addToUpdateQueue,
+    syncSourceFiles,
+    getTargetLangs,
+    getTargetFiles,
+    getJsonFromQordoba,
+    lockFile,
+    unlockFile,
+    isLocked,
+    reloadResources,
+    downloadFile,
+    getFilesFromQordoba,
+    syncTargetFiles
+} = _Q;
+
 
 // set some mock globals to refer to
-const qLocalesPath = './test/locales/qordoba';
-const pathToSourceLanguage = './test/locales/i18next/en';
-const sourceLanguageDir = './test/locales/qordoba/en';
+const qLocalesPath = loadPath.split('/').slice(0, 4).join('/');
+const sourceFiles = `${i18nPath}/${sourceLanguage}`;
+
 const mockSourceData = {
   "test.json": {
     "fileId": 736287,
     "lastModified": 1486429899000,
-    "filepath": "./test/locales/qordoba/en/common.json"
+    "filepath": "./test/locales/i18next/en/common.json"
   }
 }
 const mockTargetData = {
@@ -26,142 +66,245 @@ const mockTargetData = {
   }
 }
 
+describe('file helpers', () => {
+
+  const path = `${qLocalesPath}/blah`;
+  before( () => fs.emptyDirSync(path) );
+
+  describe('makeDirectory', () => {
+
+    it('should make a directory given a path', () => {
+      makeDirectory(path);
+      const exists = fs.existsSync(path);
+      expect(exists).to.eql(true);
+    })
+
+  })
+
+  describe('readDirectory', () => {
+
+    it('should read files in a directory', () => {
+      const files = readDirectory(path);
+      expect(files).to.eql([]);
+    })
+
+  })
+
+
+  describe('writeFile', () => {
+
+    it('should write a file to a directory', () => {
+      const filepath = `${path}/blah.json`;
+      // overwrite set to true
+      writeFile(filepath, { hey: 'ho' }, true);
+
+      const file = fs.readFileSync(filepath, 'utf-8');
+      expect(JSON.parse(file)).to.eql({ hey: 'ho' });
+    })
+
+  })
+
+  describe('writeFile', () => {
+
+    it('should write a file to a directory', () => {
+      const filepath = `${path}/blah.json`;
+      // overwrite set to true
+      writeFile(filepath, { hey: 'ho' }, true);
+
+      const file = fs.readFileSync(filepath, 'utf-8');
+      expect(JSON.parse(file)).to.eql({ hey: 'ho' });
+    })
+
+  })
+
+  after( () => fs.emptyDirSync(path) )
+})
+
+
 describe('initialization', () => {
   before( (done) => {
     // make sure qordoba directory is empty before all tests
-    fs.emptyDirSync('./test/locales/qordoba',  (err) => {
+    fs.emptyDirSync(qLocalesPath,  (err) => {
       if (err) console.log('error emptying directory!')
     });
 
     // initialize direcotires for tests
     const initialize = _Q.initialize.bind(this);
-    initialize(qLocalesPath, pathToSourceLanguage);
+    initialize();
 
     // wait for directories to be created
     setTimeout(done, 1000)
   })
 
   it('initialize file data', () => {
-    const fileDataExists = fs.existsSync('./test/locales/qordoba/files');
+    const fileDataExists = fs.existsSync(`${qLocalesPath}/files`);
     expect(fileDataExists).to.equal(true);
 
   });
 
   it('copy source language files into qordoba directory', () => {
-    const copiedData = fs.readFileSync('./test/locales/qordoba/en/test.json', 'utf-8');
+    const copiedData = fs.readFileSync(`${qLocalesPath}/en/test.json`, 'utf-8');
     expect(copiedData).to.eql(JSON.stringify({ "foo": "bar" }, null, 2));
   }); 
 
 });
 
-describe('upload', () => {
 
-  it('write file data to fs', () => {
-    const { writeFileData } = _Q;
-    // write some fake data to fs
-    writeFileData(mockSourceData, qLocalesPath);
+describe('source / target data helpers', () => {
+  const source = `${qLocalesPath}/files/source.json`;
+  const target = `${qLocalesPath}/files/target.json`;
 
-    const fileData = fs.readFileSync(`${qLocalesPath}/files/source.json`, 'utf8')
-    expect(fileData).to.eql(JSON.stringify(mockSourceData, null, 2))
+  // write some fake data to fs for testing
+  before( () => writeFile(source, mockSourceData, true) )
+
+  describe('getSourceData', () => {
+
+    it('should get file metadata from fs', () => {
+      const sourceData = getSourceData();
+      expect(sourceData).to.eql(mockSourceData);
+    })
+
   })
 
-  it('read fileData', () => {
-    const { getFileData } = _Q;
-    const data = getFileData(qLocalesPath);
-    expect(data).to.eql(mockSourceData)
+  describe('writeSourceData', () => {
+
+    it('should write file metadata to fs', () => {
+      writeSourceData({ hey: 'ho' });
+      const sourceData = getSourceData();
+      expect(sourceData).to.eql({ hey: 'ho' });
+
+      writeSourceData(mockSourceData);
+      const newSourceData = getSourceData();
+      expect(newSourceData).to.eql(mockSourceData);
+    })
+
   })
 
-  it('get file id', () => {
-    const { getFileId } = _Q;
-    const id = getFileId('test.json', qLocalesPath);
-    expect(id).to.eql(736287)
+  describe('updateSourceData', () => {
+    before( () => writeSourceData(mockSourceData) );
+
+    it('should adds file metadata after successful file upload', () => {
+      updateSourceData('test2.json', 11111)
+      const sourceData = getSourceData();
+      expect(sourceData).to.eql({ 'test.json': { fileId: 736287, lastModified: 1486429899000, filepath: './test/locales/i18next/en/common.json' },'test2.json': { fileId: 11111, lastModified: 1487100199000, filepath: './test/locales/i18next/en/test2.json' } })
+    })
+
   })
 
-  it('updates file data after upload', () => {
-    const { addFileData, getFileData } =_Q;
-    const file = 'test2.json';
-    const fileId = 111111;
-    const filepath = `${pathToSourceLanguage}/${file}`;
+  describe('getTargetData', () => {
+    before( () => writeFile(target, mockTargetData, true) );
+    
+    it('should get target language metadata', () => {
+      const targetData = getTargetData();
+      expect(targetData).to.eql(mockTargetData);
+    })
 
-    // add file data to source.json
-    addFileData(file, fileId, filepath, qLocalesPath, sourceLanguageDir);
-
-    // make sure file data has been added correctly
-    const fileData = JSON.parse(fs.readFileSync(`${qLocalesPath}/files/source.json`, 'utf8'))
-    const checkId = fileData[file].fileId;
-    const checkPath = fileData[file].filepath;
-    expect(fileId === checkId && filepath === checkPath).to.eql(true);
   })
 
-});
+  describe('writeTargetData', () => {
+    
+    it('should write target language metadata', () => {
+      writeTargetData({ perfectDay: 'bananafish'})
+      const targetData = getTargetData();
+      expect(targetData).to.eql({ perfectDay: 'bananafish'});
+    })
 
-describe('download', () => {
-  it('write target language dir', () => {
-    const { writeDirectory } = _Q;
-    writeDirectory('da', qLocalesPath);
-    const exists = fs.existsSync(`${qLocalesPath}/da`);
-    expect(exists).to.eql(true)
-  })
-  // getTargetData
-  it('get target data ', () => {
-    const { getTargetData } = _Q;
-    const data = getTargetData(qLocalesPath);
-    expect(data).to.eql({})
-  })
-  // writeTargetData
-  it('write target data ', () => {
-    const { writeTargetData, getTargetData } = _Q;
-    writeTargetData(mockTargetData, qLocalesPath);
-    const checkData = getTargetData(qLocalesPath);
-    expect(checkData).to.eql(mockTargetData)
   })
 
-  // writeNewTimestamp
-  it('write new timestamp to targetData', () => {
-    const { writeNewTimestamp, getTargetData } = _Q;
-    writeNewTimestamp('es', 'common.json', 1984, qLocalesPath);
-    const checkTimestamp = getTargetData(qLocalesPath)['es']['common.json'];
-    expect(checkTimestamp).to.eql(1984)
+  describe('updateTimestamp', () => {
+    before( () => writeFile(target, mockTargetData, true) );
+    
+    it('should update target file timestamp', () => {
+      const lg = 'da';
+      const ns = 'jumbo.json';
+      updateTimestamp(lg, ns, 1984);
+
+      const targetData = getTargetData();
+      expect(targetData[lg][ns]).to.eql(1984);
+    })
+
   })
 
-});
+})
 
-  // before((d =>one) {
-  //   // setup some stuff
-  //   i18n = i18next
-  //   .use(qordobabackend)
-  //   .init({
-  //     backend: {
-  //       // path to qordoba folder where resources will get loaded from
-  //       loadPath: './test/locales/qordoba/{{lng}}/{{ns}}.json',
 
-  //       // path to post missing resources
-  //       addPath: './test/locales/qordoba/{{lng}}/{{ns}}.missing.json',
+describe('upload / update source files', () => {
+  before( () => writeSourceData(mockSourceData) );
 
-  //       // jsonIndent to use when storing json files
-  //       jsonIndent: 2,
+  describe('getFileId', () => {
+    it('should get file id from filename', () => {
+      const file = 'test.json';
+      const id = getFileId(file);
+      expect(id).to.eql(736287);
+    })
+  })
 
-  //       // qordoba organization id
-  //       organizationId: 3036,
+  describe('getTimestamp', () => {
+    it('should get timestamp of source file', () => {
+      const file = 'test.json';
+      const timestamp = getTimestamp(file);
+      expect(timestamp).to.exist;
+      expect(timestamp).to.be.a('number');
+    })
+  })
 
-  //       // qordoba project id
-  //       projectId: 3711,
+})
 
-  //       // xAuthToken => to be removed when API stabilizes
-  //       xAuthToken: '2c116052-e424-421f-aa72-b50e9291fe10',
+describe('download files', () => {
+  before( () => writeSourceData(mockSourceData) );
 
-  //       // qordoba customer key
-  //       consumerKey: 'ooGM5l9ojTag4osd7V72SPaxmjtyH8Ww',
+  describe('lockFile', (lg, ns) => {
+    it('should lock file from being downloaded', () => {
+      lockFile('es', 'blah.json');
+      const status = isLocked('es', 'blah.json');
+      expect(status).to.eql(true);
+    })
+  })
 
-  //       // path to project source language in i18next locales folder
-  //       pathToSourceLanguage: './locales/i18next/en',
+  describe('unlockFile', (lg, ns) => {
+    it('should unlock file from being downloaded', () => {
+      unlockFile('es', 'blah.json');
+      const status = isLocked('es', 'blah.json');
+      expect(status).to.eql(false);
+    })
+  })
 
-  //       // provide an optional interval to sync target language files
-  //       syncTargetLanguageFiles: { interval: true, seconds: 10 }
-  //     },
-  //     lng: 'en',
-  //     ns: 'common'
-  //   })
+  describe('isLocked', (lg, ns) => {
+    it('should check if a file is locked', () => {
+      lockFile('es', 'blah.json');
+      const status = isLocked('es', 'blah.json');
+      expect(status).to.eql(true)
+    })
+  })
+})
 
-  //   setTimeout(done, 1000);
-  // });
+describe('upload queue', () => {
+
+  describe('incrementQueue', (lg, ns) => {
+    it('should increase queue length by one', () => {
+      incrementQueue('upload');
+      incrementQueue('upload');
+      incrementQueue('update');
+      const status = checkQueuesForItems()
+      expect(status).to.be.true;
+    })
+  })
+
+  describe('decrementQueue', (lg, ns) => {
+    it('should decrease queue length by one', () => {
+      decrementQueue('upload');
+      decrementQueue('upload');
+      decrementQueue('update');
+      const status = checkQueuesForItems();
+      expect(status).to.be.false
+    })
+  })
+
+  describe('checkQueuesForItems', (lg, ns) => {
+    it('should check if there are items in queue', () => {
+      incrementQueue('upload');
+      const status = checkQueuesForItems();
+      expect(status).to.be.true;
+    })
+  })
+})

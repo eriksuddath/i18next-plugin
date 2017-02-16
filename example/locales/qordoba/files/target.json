@@ -1,10 +1,18 @@
 {
-  "da": {
-    "jumbo.json": 1487015275000,
-    "common.json": 1487014026000
-  },
   "es": {
-    "jumbo.json": 1487015275000,
-    "common.json": 1487014026000
+    "jumbo.json": 1487101316000,
+    "common.json": 1487100947000
+  },
+  "ar": {
+    "common.json": 1487100947000,
+    "jumbo.json": 1487101316000
+  },
+  "vi": {
+    "common.json": 1487100947000,
+    "jumbo.json": 1487101316000
+  },
+  "ms": {
+    "common.json": 1487100947000,
+    "jumbo.json": 1487101316000
   }
 }
