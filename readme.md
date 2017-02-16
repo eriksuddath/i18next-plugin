@@ -67,11 +67,12 @@ If you just created a new project, check for the qoroba folder in 'root/example/
 ### Scripts
 
 Root Directory
-	- 'gulp build' - transpliles ES6 code from src -> lib into ES5. Provides runtime support for promises.
-	- 'npm test' - run mocha tests for plugin.
+- 'gulp build' - transpliles ES6 code from src -> lib into ES5. Provides runtime support for promises.
+- 'npm test' - run mocha tests for plugin.
+
 Example app
-	- 'npm run build' - transpiles ES6 code from src -> build. Builds production bundle for app.
-	- 'npm start' - starts express server in server/server.js. Serves example app to localhost:3000
+- 'npm run build' - transpiles ES6 code from src -> build. Builds production bundle for app.
+- 'npm start' - starts express server in server/server.js. Serves example app to localhost:3000
 
 ### Prerequisites
 
