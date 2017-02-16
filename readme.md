@@ -1,4 +1,4 @@
-# Project Title
+# Qordoba i18next plugin
 
 i18next-qordoba-plugin makes it easy to sync locales files between any i18next project and qordoba- qordoba.com.
 
