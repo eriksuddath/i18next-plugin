@@ -12,45 +12,53 @@ SCREENSHOTS / MORE INFO ON GETTING CONFIG KEYS
 
 After you have setup your project and have your configuration keys you are ready to run the example app.
 
-Qordoba-i18next-plugin file structure
--- root
-   -- example // example react app
-   -- lib // transplied ES6 code
-   -- src 
-      -- index.js // i18next-node-fs-backend (see below)
-      -- qordoba.js // main functionality, handles sync between qordoba and filesystem
-      -- utils.js // helper functions for i18next-node-fs-backend
-   -- test // self explanatory (see above scripts)
-   -- gulpfile.js // handles 'gulp build' command
-   package.json, etc
+Qordoba-i18next-plugin file structure.
 
-Example App File Structure
--- example
-   -- build  // compiled ES5 code
-   -- locales
-      -- i18next
-         -- en
-	   -- namespace1.json // namespaces for i18next, this is where keys are linked to translated strings
-	   -- namespace2.json
-      -- qordoba // built by plugin
-         -- es, da, etc  // all your target languages
-	 -- files
-	    -- source.json // metadata for source files, timestamps, fileIds, etc
-	    -- target.json // metadata for target files, timestamps
-   -- public
-   -- server
-   	-- server.js // express server for example app
-   -- src
-   -- style
-   package.json
-   webpack.config.js
 
+```
+├── root
+│   ├── example // example app for project
+│   ├── lib // transplied ES6 code
+│   ├── src
+│   │   ├── index.js // i18next-node-fs-backend (see below)
+│   │   ├── qordoba.js // main functionality, handles sync between qordoba and filesystem
+│   │   ├── utils.js // helper functions for i18next-node-fs-backend
+│   ├── test
+│   ├── gulpfile.js // handles 'gulp build' command
+│   ├── package.json
+```
+
+Example App File Structure.
+
+```
+├── example
+│   ├── build  // compiled ES5 code
+│   ├── locales
+│   │   ├── en // i18next-node-fs-backend (see below)
+│   │   │   ├── namespace1.json // this is where keys are linked to translated strings
+│   │   │   ├── namespace2.json
+│   │   ├── qordoba // built by plugin
+│   │   │   ├── es, da, etc  // all your target languages
+│   │   │   ├── files
+│   │   │   │   ├── source.json // metadata for source files, timestamps, fileIds, etc
+│   │   │   │   ├── target.json // metadata for target files, timestamps
+│   ├── public
+│   ├── src
+│   │   ├── assets
+│   │   ├── components
+│   │   ├── index.js // main entry point for react app
+│   ├── style
+│   ├── server
+│   │   ├── server.js // main entry point for express server (CONFIG GOES HERE)
+│   ├── webpack.config.js
+│   ├── package.json
+```
 
 To run the example app, go into the server and add you keys.
-	- 'ORGANIZATION_ID' // id of your qordoba organization
-	- 'PROJECT_ID' // id qordoba give you when you create a new project
-	- 'MILESTONE_ID' // id of milestone (eg. 'Proofreading' ) that you want to pull translations from
-	- 'CONSUMER_KEY" // secret key to access API
+- ORGANIZATION_ID // id of your qordoba organization
+- PROJECT_ID // id qordoba give you when you create a new project
+- MILESTONE_ID // id of milestone (eg. 'Proofreading' ) that you want to pull translations from
+- CONSUMER_KEY // secret key to access API
 	
 Then 'npm run build' to transplile your configuration into build directory.
 
@@ -67,24 +75,15 @@ Example app
 
 ### Prerequisites
 
-Familiarity with the i18next internationalization framework.
+- Familiarity with the i18next internationalization framework.
 
-http://i18next.com/
-
-I18next-node-fs-backend. This is what handles loading the locales files into the i18next framework. 
-
-https://github.com/i18next/i18next-node-fs-backend
+- I18next-node-fs-backend. This is what handles loading the locales files into the i18next framework. 
 
 ### Prerequisites for the example app
 
-React-18next internationalization plugin - a higher order component to provide the i18next functionality to react components.
+- React-18next internationalization plugin - a higher order component to provide the i18next functionality to react components.
 
-https://github.com/i18next/react-i18next
-
-I18next-express-middleware - middleware to use i18next in express.js. Supports multiloading of backend routes, etc.
-
-https://github.com/i18next/i18next-express-middleware
-
+- I18next-express-middleware - middleware to use i18next in express.js. Supports multiloading of backend routes, etc.
 
 ## Running the tests
 
