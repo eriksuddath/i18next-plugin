@@ -186,7 +186,7 @@ describe('source / target data helpers', () => {
     it('should adds file metadata after successful file upload', () => {
       updateSourceData('test2.json', 11111)
       const sourceData = getSourceData();
-      expect(sourceData).to.eql({ 'test.json': { fileId: 736287, lastModified: 1486429899000, filepath: './test/locales/i18next/en/common.json' },'test2.json': { fileId: 11111, lastModified: 1487100199000, filepath: './test/locales/i18next/en/test2.json' } })
+      expect(sourceData['test2.json']['fileId']).to.eql(11111)
     })
 
   })
